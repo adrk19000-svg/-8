@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لعبة المطابقة | عصابة الليل</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rakkas&family=Cairo:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --black:#050403;
+    --black-2:#0d0a07;
+    --table:#1a0d0d;
+    --table-light:#2b1212;
+    --gold:#c9a24b;
+    --gold-bright:#e8c874;
+    --gold-dim:#8a7038;
+    --cream:#ede2c8;
+    --red:#7a0c18;
+    --red-bright:#a81726;
+    --muted:#8f8272;
+    --line:#332a1e;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:'Cairo', sans-serif;
+    background:
+      radial-gradient(ellipse 90% 60% at 50% 0%, rgba(168,23,38,0.10), transparent 60%),
+      radial-gradient(circle at 15% 80%, rgba(168,23,38,0.08), transparent 45%),
+      var(--black);
+    color:var(--cream);
+    min-height:100vh;
+    overflow-x:hidden;
+    position:relative;
+    transition: transform .05s;
+  }
+  body.shake{ animation: bodyShake .45s ease; }
+  @keyframes bodyShake{
+    0%,100%{ transform:translate(0,0); }
+    20%{ transform:translate(-6px,2px); }
+    40%{ transform:translate(6px,-2px); }
+    60%{ transform:translate(-4px,1px); }
+    80%{ transform:translate(4px,-1px); }
+  }
+
+  body::before{
+    content:"";
+    position:fixed; inset:0; z-index:0; pointer-events:none; opacity:0.05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .vignette{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    box-shadow: inset 0 0 200px 60px rgba(0,0,0,0.85);
+  }
+
+  .wrap{position:relative; z-index:2; max-width:1000px; margin:0 auto; padding:26px 16px 60px;}
+
+  a.back-link{
+    display:inline-flex; align-items:center; gap:6px;
+    color:var(--gold-dim);
+    text-decoration:none;
+    font-size:0.85rem;
+    margin-bottom:18px;
+    transition:color .2s;
+  }
+  a.back-link:hover{ color:var(--gold-bright); }
+
+  h1.title{
+    font-family:'Rakkas', serif;
+    text-align:center;
+    font-size:clamp(2.2rem, 6vw, 3.4rem);
+    background: linear-gradient(180deg, var(--gold-bright) 10%, var(--gold) 55%, var(--gold-dim) 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    text-shadow:0 6px 26px rgba(0,0,0,0.6);
+    margin:6px 0 4px;
+    letter-spacing:1px;
+  }
+  .subtitle{
+    text-align:center;
+    color:var(--muted);
+    font-size:0.95rem;
+    margin-bottom:8px;
+  }
+  .smoke-divider{
+    margin:18px auto 26px;
+    width:200px; height:1px;
+    background:linear-gradient(90deg, transparent, var(--red-bright), var(--gold), var(--red-bright), transparent);
+    position:relative;
+  }
+  .smoke-divider::before{
+    content:"♠"; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    background:var(--black); color:var(--gold); font-size:0.9rem; padding:0 10px;
+  }
+
+  /* ---------- SETUP SCREEN ---------- */
+  .setup-card{
+    background:linear-gradient(160deg, var(--black-2), #090604);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:30px 24px;
+    max-width:460px;
+    margin:30px auto;
+    text-align:center;
+    box-shadow:0 20px 50px rgba(0,0,0,0.55);
+    position:relative;
+  }
+  .setup-card::before{
+    content:"";
+    position:absolute; inset:0; border-radius:14px;
+    box-shadow: inset 0 0 40px rgba(122,12,24,0.08);
+    pointer-events:none;
+  }
+  .setup-card h2{
+    font-family:'Rakkas', serif;
+    color:var(--gold-bright);
+    font-size:1.5rem;
+    margin-bottom:18px;
+  }
+  .player-count-row{
+    display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin:18px 0 26px;
+  }
+  .count-btn{
+    width:50px; height:50px; border-radius:50%;
+    border:2px solid var(--gold-dim);
+    background:transparent;
+    color:var(--cream);
+    font-size:1.1rem; font-weight:700;
+    cursor:pointer;
+    transition:.15s;
+    font-family:'Cairo';
+  }
+  .count-btn:hover{ border-color:var(--gold); background:rgba(201,162,75,0.1); }
+  .count-btn.active{
+    background:linear-gradient(180deg, var(--gold-bright), var(--gold));
+    color:var(--black);
+    border-color:var(--gold-bright);
+    box-shadow:0 0 18px rgba(201,162,75,0.5);
+  }
+  .names-list{display:flex; flex-direction:column; gap:8px; margin-bottom:22px;}
+  .names-list input{
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:11px 14px;
+    color:var(--cream);
+    font-family:'Cairo';
+    font-size:0.95rem;
+    text-align:center;
+  }
+  .names-list input:focus{ outline:none; border-color:var(--gold); }
+  .names-list input::placeholder{ color:var(--muted); }
+
+  .btn-gold{
+    background:linear-gradient(180deg, var(--gold-bright), var(--gold));
+    color:var(--black);
+    border:1px solid #7a5f22;
+    padding:14px 34px;
+    border-radius:6px;
+    font-family:'Cairo';
+    font-weight:900;
+    font-size:1.02rem;
+    letter-spacing:0.5px;
+    cursor:pointer;
+    box-shadow:0 8px 20px rgba(0,0,0,0.4);
+    transition:transform .12s, filter .15s;
+  }
+  .btn-gold:hover{ transform:translateY(-2px); filter:brightness(1.08); }
+  .btn-gold:active{ transform:translateY(0); }
+  .btn-gold:disabled{ opacity:0.4; cursor:not-allowed; transform:none; }
+
+  .btn-ghost{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--cream);
+    padding:9px 18px;
+    border-radius:6px;
+    font-family:'Cairo';
+    cursor:pointer;
+    font-size:0.85rem;
+    transition:border-color .2s, color .2s;
+  }
+  .btn-ghost:hover{ border-color:var(--gold-dim); color:var(--gold-bright); }
+
+  /* ---------- GAME SCREEN ---------- */
+  #gameScreen{display:none;}
+
+  .table-oval{
+    position:relative;
+    background:
+      radial-gradient(ellipse at center, var(--table-light) 0%, var(--table) 100%);
+    border:6px solid var(--gold);
+    border-radius:50%/40%;
+    min-height:320px;
+    box-shadow:inset 0 0 70px rgba(0,0,0,0.6), 0 15px 40px rgba(0,0,0,0.55), 0 0 0 1px rgba(201,162,75,0.15);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin:20px 0 26px;
+    padding:30px;
+  }
+  .table-oval::before{
+    content:"♠ ♣ ♥ ♦";
+    position:absolute;
+    color:rgba(201,162,75,0.06);
+    font-size:2rem;
+    letter-spacing:30px;
+    top:14px; left:50%; transform:translateX(-50%);
+    pointer-events:none;
+  }
+
+  .center-pile{
+    position:relative;
+    width:110px; height:150px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .pile-count-badge{
+    position:absolute;
+    top:-16px; left:50%; transform:translateX(-50%);
+    background:linear-gradient(180deg, var(--red-bright), var(--red));
+    color:var(--gold-bright);
+    font-weight:900;
+    font-size:0.8rem;
+    padding:3px 12px;
+    border-radius:12px;
+    z-index:50;
+    box-shadow:0 3px 8px rgba(0,0,0,0.5);
+    border:1px solid #4a0a12;
+  }
+
+  .card{
+    width:80px; height:112px;
+    border-radius:9px;
+    position:absolute;
+    top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    box-shadow:0 4px 12px rgba(0,0,0,0.55);
+    transition: transform .35s ease, box-shadow .35s ease;
+    backface-visibility:hidden;
+  }
+  .card-face{
+    background:var(--cream);
+    border:1px solid rgba(0,0,0,0.2);
+    border-radius:9px;
+    display:flex; flex-direction:column; justify-content:space-between;
+    padding:6px 8px;
+    font-weight:900;
+    color:var(--black);
+    height:100%;
+  }
+  .card-face.red{ color:var(--red-bright); }
+  .card-face .rank-top{font-size:1.1rem; align-self:flex-start;}
+  .card-face .rank-bottom{font-size:1.1rem; align-self:flex-end; transform:rotate(180deg);}
+  .card-face .suit-mid{font-size:1.8rem; text-align:center;}
+
+  @keyframes flyIn{
+    from{ transform:translate(-50%,-220%) rotate(-25deg); opacity:0; }
+    to{ transform:translate(-50%,-50%) rotate(var(--tilt,0deg)); opacity:1; }
+  }
+  .card.dealt{animation:flyIn .45s ease forwards;}
+
+  @keyframes matchBurst{
+    0%{ box-shadow:0 0 0 rgba(232,200,116,0);}
+    40%{ box-shadow:0 0 45px 14px rgba(232,200,116,0.85);}
+    100%{ box-shadow:0 0 0 rgba(232,200,116,0);}
+  }
+  .burst{animation:matchBurst .9s ease;}
+
+  .flash-msg{
+    position:absolute;
+    top:-46px; left:50%; transform:translateX(-50%);
+    font-family:'Rakkas', serif;
+    font-size:1.5rem;
+    color:var(--gold-bright);
+    text-shadow:0 0 14px rgba(232,200,116,0.9), 0 2px 4px rgba(0,0,0,0.7);
+    opacity:0;
+    pointer-events:none;
+    white-space:nowrap;
+  }
+  .flash-msg.show{ animation:flashPop 1.1s ease forwards; }
+  @keyframes flashPop{
+    0%{opacity:0; transform:translateX(-50%) translateY(10px) scale(0.8);}
+    20%{opacity:1; transform:translateX(-50%) translateY(-6px) scale(1.05);}
+    75%{opacity:1; transform:translateX(-50%) translateY(-6px) scale(1);}
+    100%{opacity:0; transform:translateX(-50%) translateY(-20px) scale(0.9);}
+  }
+
+  /* players ring */
+  .players-ring{
+    display:flex; flex-wrap:wrap; gap:14px; justify-content:center;
+    margin-bottom:22px;
+  }
+  .player-chip{
+    background:var(--black-2);
+    border:2px solid var(--line);
+    border-radius:12px;
+    padding:14px 16px;
+    min-width:120px;
+    text-align:center;
+    position:relative;
+    transition:.2s;
+    overflow:hidden;
+  }
+  .player-chip.active{
+    border-color:var(--gold-bright);
+    background:rgba(201,162,75,0.10);
+    box-shadow:0 0 22px rgba(201,162,75,0.35);
+    transform:translateY(-4px);
+  }
+  .player-chip.eliminated{
+    opacity:0.55;
+    filter:grayscale(0.7);
+    border-color:var(--red);
+  }
+  .player-chip .p-name{
+    font-weight:700; font-size:0.95rem; margin-bottom:6px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .player-chip .p-cards{
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    font-size:0.85rem; color:var(--gold-bright); font-weight:900;
+  }
+  .mini-card-back{
+    width:20px; height:28px; border-radius:3px;
+    background:repeating-linear-gradient(45deg, var(--table) 0 4px, var(--table-light) 4px 8px);
+    border:1px solid var(--gold);
+  }
+  .crown{position:absolute; top:-14px; right:50%; transform:translateX(50%); font-size:1.1rem;}
+  .out-label{
+    display:inline-flex; align-items:center; gap:4px;
+    margin-top:4px; font-size:0.7rem; color:var(--red-bright); font-weight:900;
+  }
+
+  /* ---- elimination "hit" effect ---- */
+  .hit-overlay{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    pointer-events:none;
+    opacity:0;
+    z-index:5;
+  }
+  .hit-overlay.fire{
+    animation: hitFlash .6s ease forwards;
+  }
+  @keyframes hitFlash{
+    0%{ opacity:0; }
+    15%{ opacity:1; background:radial-gradient(circle, rgba(255,230,180,0.9), rgba(168,23,38,0.5) 55%, transparent 75%); }
+    40%{ opacity:0.9; background:radial-gradient(circle, transparent, rgba(122,12,24,0.35) 60%, transparent 80%); }
+    100%{ opacity:0; }
+  }
+  .hit-mark{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    opacity:0;
+  }
+  .hit-mark.show{
+    animation: markIn .4s ease .35s forwards;
+  }
+  @keyframes markIn{
+    0%{ opacity:0; transform:scale(0.4) rotate(-20deg); }
+    100%{ opacity:1; transform:scale(1) rotate(-8deg); }
+  }
+  .hit-mark svg{ width:56px; height:56px; }
+
+  .chip-shake.go{ animation: chipShake .5s ease; }
+  @keyframes chipShake{
+    0%,100%{ transform:translateX(0); }
+    20%{ transform:translateX(-5px) rotate(-1.5deg); }
+    40%{ transform:translateX(5px) rotate(1.5deg); }
+    60%{ transform:translateX(-3px); }
+    80%{ transform:translateX(3px); }
+  }
+
+  .turn-banner{
+    text-align:center;
+    font-family:'Rakkas', serif;
+    font-size:1.35rem;
+    color:var(--gold-bright);
+    margin-bottom:14px;
+    min-height:32px;
+  }
+
+  .controls{
+    display:flex; justify-content:center; gap:14px; margin-bottom:22px; flex-wrap:wrap;
+  }
+
+  .log-box{
+    background:var(--black-2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 16px;
+    max-height:150px;
+    overflow-y:auto;
+    font-size:0.85rem;
+    line-height:1.9;
+    color:var(--muted);
+  }
+  .log-box div{ border-bottom:1px dashed rgba(255,255,255,0.06); padding:2px 0; }
+  .log-box div:last-child{ border-bottom:none; }
+  .log-box div.hit-log{ color:var(--red-bright); font-weight:700; }
+
+  .winner-screen{
+    display:none;
+    text-align:center;
+    padding:40px 20px;
+  }
+  .winner-screen h2{
+    font-family:'Rakkas', serif;
+    font-size:2.2rem;
+    color:var(--gold-bright);
+    margin-bottom:10px;
+    text-shadow:0 0 24px rgba(232,200,116,0.55);
+  }
+  .winner-screen p{
+    color:var(--muted);
+    margin-bottom:24px;
+  }
+
+  @media (max-width:480px){
+    .card{width:64px; height:90px;}
+    .card-face .rank-top, .card-face .rank-bottom{font-size:0.9rem;}
+    .card-face .suit-mid{font-size:1.3rem;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .card.dealt{animation:none;}
+    .burst{animation:none;}
+    .flash-msg.show{animation:none; opacity:1;}
+    body.shake{animation:none;}
+    .hit-overlay.fire, .hit-mark.show, .chip-shake.go{animation:none;}
+  }
+</style>
+</head>
+<body>
+<div class="vignette"></div>
+<div class="wrap">
+  <a class="back-link" href="index.html">← رجوع لنادي الليل</a>
+
+  <h1 class="title">لعبة المطابقة 🃏</h1>
+  <p class="subtitle">100 ورقة على طاولة العصابة... ومن يطابق يكسح الوسط كله</p>
+  <div class="smoke-divider"></div>
+
+  <!-- SETUP -->
+  <div class="setup-card" id="setupScreen">
+    <h2>كم عدد أفراد العصابة؟</h2>
+    <div class="player-count-row" id="countRow"></div>
+    <div class="names-list" id="namesList"></div>
+    <button class="btn-gold" id="startBtn">ابدأ الجولة</button>
+  </div>
+
+  <!-- GAME -->
+  <div id="gameScreen">
+    <div class="turn-banner" id="turnBanner"></div>
+
+    <div class="table-oval">
+      <div class="center-pile" id="centerPile">
+        <div class="pile-count-badge" id="pileCount">0</div>
+        <div class="flash-msg" id="flashMsg"></div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn-gold" id="drawBtn">اسحب كرت 🂠</button>
+      <button class="btn-ghost" id="restartBtn">جولة جديدة</button>
+    </div>
+
+    <div class="players-ring" id="playersRing"></div>
+
+    <div class="log-box" id="logBox"></div>
+  </div>
+
+  <!-- WINNER -->
+  <div class="winner-screen" id="winnerScreen">
+    <h2 id="winnerText"></h2>
+    <p>البقية... تمت تصفيتهم من اللعبة 🕵️‍♂️</p>
+    <button class="btn-gold" id="playAgainBtn">جولة جديدة</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+  const SUITS = [
+    {sym:'♠', color:'black'},
+    {sym:'♥', color:'red'},
+    {sym:'♦', color:'red'},
+    {sym:'♣', color:'black'}
+  ];
+
+  let players = [];       // {name, cards:[card,...], out:bool}
+  let centerPile = [];    // stack, last = top
+  let currentIndex = 0;
+  let selectedCount = 4;
+  let pendingEliminationIdx = null;
+
+  const countRow = document.getElementById('countRow');
+  const namesList = document.getElementById('namesList');
+  const startBtn = document.getElementById('startBtn');
+  const setupScreen = document.getElementById('setupScreen');
+  const gameScreen = document.getElementById('gameScreen');
+  const winnerScreen = document.getElementById('winnerScreen');
+  const turnBanner = document.getElementById('turnBanner');
+  const centerPileEl = document.getElementById('centerPile');
+  const pileCountEl = document.getElementById('pileCount');
+  const flashMsg = document.getElementById('flashMsg');
+  const drawBtn = document.getElementById('drawBtn');
+  const restartBtn = document.getElementById('restartBtn');
+  const playAgainBtn = document.getElementById('playAgainBtn');
+  const playersRing = document.getElementById('playersRing');
+  const logBox = document.getElementById('logBox');
+  const winnerText = document.getElementById('winnerText');
+
+  const HIT_MARK_SVG = '<svg viewBox="0 0 64 64" fill="none" stroke="#e8c874" stroke-width="3">' +
+    '<circle cx="32" cy="32" r="20" stroke="#a81726" stroke-width="4"/>' +
+    '<path d="M32 12v40M12 32h40" stroke="#a81726" stroke-width="2"/>' +
+    '<circle cx="32" cy="32" r="4" fill="#a81726" stroke="none"/>' +
+    '</svg>';
+
+  // ---------- SETUP UI ----------
+  function renderCountRow(){
+    countRow.innerHTML = '';
+    for(let n=2; n<=8; n++){
+      const b = document.createElement('button');
+      b.className = 'count-btn' + (n===selectedCount ? ' active' : '');
+      b.textContent = n;
+      b.onclick = () => { selectedCount = n; renderCountRow(); renderNamesList(); };
+      countRow.appendChild(b);
+    }
+  }
+  function renderNamesList(){
+    namesList.innerHTML = '';
+    for(let i=0; i<selectedCount; i++){
+      const input = document.createElement('input');
+      input.placeholder = 'اسم اللاعب ' + (i+1);
+      input.maxLength = 14;
+      input.dataset.idx = i;
+      namesList.appendChild(input);
+    }
+  }
+  renderCountRow();
+  renderNamesList();
+
+  startBtn.onclick = () => {
+    const inputs = namesList.querySelectorAll('input');
+    const names = Array.from(inputs).map((inp, i) => inp.value.trim() || ('لاعب ' + (i+1)));
+    startGame(names);
+  };
+
+  // ---------- DECK ----------
+  function buildDeck(){
+    let deck = [];
+    for(let d=0; d<2; d++){
+      for(const s of SUITS){
+        for(const r of RANKS){
+          deck.push({rank:r, suit:s.sym, color:s.color});
+        }
+      }
+    }
+    shuffle(deck);
+    deck = deck.slice(0, 100);
+    shuffle(deck);
+    return deck;
+  }
+  function shuffle(arr){
+    for(let i=arr.length-1; i>0; i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  // ---------- GAME START ----------
+  function startGame(names){
+    const deck = buildDeck();
+    players = names.map(name => ({name, cards:[], out:false}));
+    let i = 0;
+    while(deck.length){
+      players[i % players.length].cards.push(deck.pop());
+      i++;
+    }
+    centerPile = [];
+    currentIndex = 0;
+    pendingEliminationIdx = null;
+    logBox.innerHTML = '';
+    addLog('🎴 بدأت الجولة بـ 100 ورقة موزعة على ' + players.length + ' من أفراد العصابة.');
+
+    setupScreen.style.display = 'none';
+    winnerScreen.style.display = 'none';
+    gameScreen.style.display = 'block';
+
+    renderAll();
+  }
+
+  restartBtn.onclick = playAgainBtn.onclick = () => {
+    gameScreen.style.display = 'none';
+    winnerScreen.style.display = 'none';
+    setupScreen.style.display = 'block';
+  };
+
+  // ---------- RENDER ----------
+  function renderAll(){
+    renderPlayers();
+    renderCenter();
+    renderTurnBanner();
+  }
+
+  function renderTurnBanner(){
+    const p = players[currentIndex];
+    turnBanner.textContent = p ? ('🎯 دور: ' + p.name) : '';
+    drawBtn.disabled = !p || p.cards.length === 0;
+  }
+
+  function renderPlayers(){
+    playersRing.innerHTML = '';
+    players.forEach((p, idx) => {
+      const chip = document.createElement('div');
+      chip.className = 'player-chip chip-shake' + (idx===currentIndex && !p.out ? ' active' : '') + (p.out ? ' eliminated' : '');
+      chip.dataset.idx = idx;
+      let inner = '<div class="p-name">' + escapeHtml(p.name) + '</div>';
+      inner += '<div class="p-cards"><span class="mini-card-back"></span>' + p.cards.length + '</div>';
+      if(p.out){
+        inner += '<div class="out-label">🔫 تمت تصفيته</div>';
+        inner += '<div class="hit-mark show"><span></span></div>';
+      } else {
+        inner += '<div class="hit-overlay"></div>';
+      }
+      chip.innerHTML = inner;
+      if(p.out){
+        const markEl = chip.querySelector('.hit-mark');
+        if(markEl) markEl.innerHTML = HIT_MARK_SVG;
+      }
+      playersRing.appendChild(chip);
+    });
+  }
+
+  function cardFaceHTML(card){
+    const colorClass = card.color === 'red' ? ' red' : '';
+    return '<div class="card-face' + colorClass + '">' +
+      '<div class="rank-top">' + card.rank + card.suit + '</div>' +
+      '<div class="suit-mid">' + card.suit + '</div>' +
+      '<div class="rank-bottom">' + card.rank + card.suit + '</div>' +
+      '</div>';
+  }
+
+  function renderCenter(){
+    centerPileEl.querySelectorAll('.card').forEach(c => c.remove());
+    pileCountEl.textContent = centerPile.length;
+
+    const visible = centerPile.slice(-6);
+    visible.forEach((card, i) => {
+      const el = document.createElement('div');
+      el.className = 'card';
+      const tilt = (i % 2 === 0 ? -1 : 1) * (i * 2);
+      el.style.setProperty('--tilt', tilt + 'deg');
+      el.style.transform = 'translate(-50%,-50%) rotate(' + tilt + 'deg)';
+      el.style.zIndex = 10 + i;
+      el.innerHTML = cardFaceHTML(card);
+      centerPileEl.appendChild(el);
+    });
+  }
+
+  function addLog(text, isHit){
+    const div = document.createElement('div');
+    if(isHit) div.className = 'hit-log';
+    div.textContent = text;
+    logBox.appendChild(div);
+    logBox.scrollTop = logBox.scrollHeight;
+  }
+
+  function escapeHtml(s){
+    return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ---------- GAME LOGIC ----------
+  function activePlayers(){
+    return players.filter(p => !p.out);
+  }
+
+  function nextActiveIndex(fromIdx){
+    let idx = fromIdx;
+    for(let step=0; step<players.length; step++){
+      idx = (idx + 1) % players.length;
+      if(!players[idx].out) return idx;
+    }
+    return fromIdx;
+  }
+
+  drawBtn.onclick = () => {
+    const player = players[currentIndex];
+    if(!player || player.out || player.cards.length === 0) return;
+    drawBtn.disabled = true;
+
+    const ri = Math.floor(Math.random() * player.cards.length);
+    const card = player.cards.splice(ri, 1)[0];
+    const prevTop = centerPile.length ? centerPile[centerPile.length - 1] : null;
+    centerPile.push(card);
+
+    renderPlayers();
+    renderCenter();
+    addLog('🂠 ' + player.name + ' يسحب: ' + card.rank + card.suit);
+
+    requestAnimationFrame(() => {
+      const cards = centerPileEl.querySelectorAll('.card');
+      const last = cards[cards.length - 1];
+      if(last) last.classList.add('dealt');
+    });
+
+    setTimeout(() => {
+      const isMatch = prevTop && prevTop.rank === card.rank;
+      if(isMatch){
+        handleMatch(player);
+      } else {
+        handleNoMatch(player);
+      }
+    }, 480);
+  };
+
+  function handleMatch(player){
+    const won = centerPile.splice(0, centerPile.length);
+    player.cards.push(...won);
+    shuffle(player.cards);
+
+    addLog('🔥 مطابقة! ' + player.name + ' يستولي على ' + won.length + ' ورقة من الوسط.');
+    flashMsg.textContent = '🔥 مطابقة!';
+    flashMsg.classList.remove('show');
+    void flashMsg.offsetWidth;
+    flashMsg.classList.add('show');
+    centerPileEl.classList.remove('burst');
+    void centerPileEl.offsetWidth;
+    centerPileEl.classList.add('burst');
+
+    renderPlayers();
+    renderCenter();
+    advanceTurn(player);
+  }
+
+  function handleNoMatch(player){
+    renderCenter();
+    advanceTurn(player);
+  }
+
+  function advanceTurn(justPlayed){
+    let justEliminatedIdx = null;
+    if(justPlayed.cards.length === 0 && !justPlayed.out){
+      justPlayed.out = true;
+      justEliminatedIdx = players.indexOf(justPlayed);
+      addLog('💀 ' + justPlayed.name + ' نفدت أوراقه... تمت تصفيته من العصابة.', true);
+    }
+
+    const remaining = activePlayers();
+    if(remaining.length <= 1){
+      renderPlayers();
+      if(justEliminatedIdx !== null) fireEliminationEffect(justEliminatedIdx);
+      setTimeout(() => finishGame(remaining[0] || null), justEliminatedIdx !== null ? 700 : 0);
+      return;
+    }
+
+    currentIndex = nextActiveIndex(currentIndex);
+    renderPlayers();
+    renderTurnBanner();
+    if(justEliminatedIdx !== null) fireEliminationEffect(justEliminatedIdx);
+  }
+
+  function fireEliminationEffect(idx){
+    const chip = playersRing.querySelector('.player-chip[data-idx="' + idx + '"]');
+    if(!chip) return;
+    document.body.classList.remove('shake');
+    void document.body.offsetWidth;
+    document.body.classList.add('shake');
+
+    chip.classList.remove('chip-shake');
+    void chip.offsetWidth;
+    chip.classList.add('chip-shake', 'go');
+
+    const overlay = document.createElement('div');
+    overlay.className = 'hit-overlay fire';
+    chip.appendChild(overlay);
+    setTimeout(() => overlay.remove(), 650);
+  }
+
+  function finishGame(winner){
+    gameScreen.style.display = 'none';
+    winnerScreen.style.display = 'block';
+    winnerText.textContent = winner ? ('🏆 الناجي الوحيد: ' + winner.name) : '🏆 انتهت الجولة';
+  }
+
+})();
+</script>
+</body>
+</html>
+معدني", "كبس الأوراق", "قوة ضغط"] },
+        { word: "مشبك", hints: ["تجميع الورق", "انحناءة حديدية", "إمساك"] },
+        { word: "ظرف", hints: ["احتواء الرسالة", "ورق مطوي", "إغلاق لاصق"] },
+        { word: "طابع", hints: ["ختم بريدي", "صورة صغيرة", "لصق ركني"] },
+        { word: "محبار", hints: ["مستودع الحبر", "بلل القلم", "وعاء قديم"] },
+        { word: "دفتر", hints: ["تجميع الصفحات", "تدوين الخواطر", "غلاف ورقي"] },
+        { word: "مذكرة", hints: ["مواعيد مرتقبة", "تدوين سريع", "كتاب جيب"] },
+        { word: "رزنامة", hints: ["تتبع الأيام", "أوراق ممزقة", "تاريخ زمني"] },
+        { word: "منبه", hints: ["قطع النوم", "صوت مزعج", "توقيت مسبق"] },
+        { word: "قفل", hints: ["منع الدخول", "حراسة الباب", "إغلاق محكم"] },
+        { word: "سلسلة", hints: ["حلقات مترابطة", "قيد معدني", "شد وتحمل"] },
+        { word: "مثقاب", hints: ["ثقب الجدران", "دوران سريع", "صوت مزعج"] },
+        { word: "عربة", hints: ["دفع الأثقال", "عجلات ناقلة", "حمل خفيف"] },
+        { word: "دراجة", hints: ["دواسات متحركة", "توازن ذاتي", "عجلتان"] },
+        { word: "سيارة", hints: ["محرك هادر", "إطارات مطاطية", "وسيلة تنقل"] },
+        { word: "حافلة", hints: ["ركاب كثر", "خط سير ثابت", "حجم كبير"] },
+        { word: "قطار", hints: ["عربات متصلة", "مسار حديدي", "رحلة طويلة"] },
+        { word: "قارب", hints: ["طفو على الماء", "مجداف", "حجم صغير"] },
+        { word: "سفينة", hints: ["عملاق بحري", "ملاحة طويلة", "أعالي البحار"] },
+        { word: "طائرة", hints: ["اختراق السحاب", "جناحان ثابتان", "تحليق"] },
+        { word: "صاروخ", hints: ["انطلاق فضائي", "سرعة فائقة", "احتراق خلفي"] },
+        { word: "منطاد", hints: ["طفو هوائي", "سلة معلقة", "ارتفاع بطيء"] },
+        { word: "طوق", hints: ["إنقاذ الغريق", "دائرة طفو", "حماية"] },
+        { word: "عصا", hints: ["اتكاء الشيخ", "خشب طويل", "دعم الحركة"] },
+        { word: "كرسي متحرك", hints: ["عجلات بديلة", "جلوس متحرك", "دعم العاجز"] },
+        { word: "عكاز", hints: ["دعم الساق", "اتكاء ثنائي", "حمل الجسم"] },
+        { word: "جبيرة", hints: ["تثبيت العظم", "قالب صلب", "علاج الكسر"] },
+        { word: "ميزان حرارة", hints: ["قياس السخونة", "زئبق رفيع", "مؤشر صحي"] },
+        { word: "حقنة", hints: ["اختراق الجلد", "دفع الدواء", "إبرة رفيعة"] },
+        { word: "سماعة", hints: ["استماع النبض", "أداة الطبيب", "نقل الصوت الداخلي"] },
+        { word: "ضمادة", hints: ["تغطية الجرح", "لف أبيض", "حماية الإصابة"] },
+        { word: "مرهم", hints: ["دهن موضعي", "لطف الجلد", "شفاء تدريجي"] },
+        { word: "قطرة", hints: ["تقطير العين", "سائل علاجي", "جرعة صغيرة"] },
+        { word: "مقص طبي", hints: ["قص الشاش", "تعقيم دائم", "أداة الجراح"] },
+        { word: "نقالة", hints: ["حمل المصاب", "فراش عجلات", "نقل طارئ"] },
+        { word: "إبرة", hints: ["ثقب القماش", "خيط رفيع", "رأس مدبب"] },
+        { word: "خيط", hints: ["وصل الأجزاء", "خط رفيع", "التفاف"] },
+        { word: "صوف", hints: ["نسيج شتوي", "وبر الغنم", "دفء ناعم"] },
+        { word: "سنارة", hints: ["صيد الأسماك", "خيط متدلي", "صنارة معقوفة"] },
+        { word: "شبكة", hints: ["خيوط متشابكة", "صيد واسع", "فخ مساحي"] },
+        { word: "فأس", hints: ["قطع الحطب", "نصل ثقيل", "ضربة قوية"] },
+        { word: "مرش", hints: ["رذاذ الماء", "توزيع قطرات", "سقي خفيف"] },
+        { word: "مجرفة", hints: ["رفع التراب", "شفرة مسطحة", "حفر"] },
+        { word: "عربة أطفال", hints: ["نقل الصغير", "دفع هادئ", "سرير متحرك"] },
+        { word: "لعبة", hints: ["تسلية الصغار", "مرح مؤقت", "تشكيل ترفيهي"] },
+        { word: "دمية", hints: ["شكل إنسان مصغر", "لعب صامت", "قماش محشو"] },
+        { word: "كرة", hints: ["دوران مستمر", "قفز ورمي", "شكل كروي"] },
+        { word: "مكعبات", hints: ["بناء عشوائي", "تجميع أجزاء", "توازن هندسي"] },
+        { word: "طائرة ورقية", hints: ["تحليق بالهواء", "خيط مشدود", "لعبة ريح"] },
+        { word: "بالون", hints: ["نفخ الهواء", "جلد مطاطي", "تطاير خفيف"] },
+        { word: "شريط", hints: ["زينة الهدايا", "ربط أنيق", "شريط ملون"] },
+        { word: "صفارة", hints: ["صوت حاد", "نفخ هوائي", "تنبيه"] },
+        { word: "طبل", hints: ["قرع إيقاعي", "جلد مشدود", "صوت أجوف"] },
+        { word: "مزمار", hints: ["نفخ موسيقي", "أنبوب صوتي", "نغم"] },
+        { word: "عود", hints: ["أوتار خشبية", "عزف شرقي", "صوت شجي"] },
+        { word: "بيانو", hints: ["مفاتيح سوداء وبيضاء", "عزف ضخم", "صوت عميق"] },
+        { word: "كمان", hints: ["قوس خشبي", "أوتار حادة", "عزف رفيع"] },
+        { word: "جيتار", hints: ["أوتار بارزة", "عزف حديث", "هيكل خشبي"] },
+        { word: "ميكروفون", hints: ["تضخيم الصوت", "التقاط الكلمات", "وقوف أمامه"] },
+        { word: "سماعات", hints: ["إدخال الصوت للأذن", "عزل العالم", "استماع خاص"] },
+        { word: "كاميرا", hints: ["تجميد اللحظة", "عدسة ماصة للضوء", "توثيق"] },
+        { word: "فلاش", hints: ["ومضة ضوئية", "إضاءة خاطفة", "إزعاج بصري"] },
+        { word: "حامل ثلاثي", hints: ["تثبيت الصورة", "ثلاث أرجل", "استقرار العدسة"] },
+        { word: "منظار", hints: ["تقريب البعيد", "رؤية مقربة", "عدسات متتالية"] },
+        { word: "بوصلة", hints: ["تحديد الشمال", "إبرة مغناطيسية", "اتجاهات"] },
+        { word: "خريطة", hints: ["رسم الأرض", "توجيه الطرق", "أبعاد مصغرة"] },
+        { word: "مجهر", hints: ["تكبير الدقائق", "رؤية ما لا يرى", "عدسات مخبرية"] },
+        { word: "أنبوب اختبار", hints: ["زجاج رفيع", "تفاعل كيميائي", "حفظ سائل"] },
+        { word: "دورق", hints: ["قاع عريض", "زجاج معملي", "مزيج"] },
+        { word: "قمع", hints: ["توجيه السائل", "شكل مخروطي", "صب ضيق"] },
+        { word: "أنبوب", hints: ["مرور السوائل", "هيكل أسطواني", "توصيل"] },
+        { word: "خرطوم", hints: ["سقي مرن", "نقل الماء", "أنبوب مطاطي"] },
+        { word: "صنبور", hints: ["تحكم بالماء", "فتح وإغلاق", "مخرج سائل"] },
+        { word: "حوض", hints: ["تجميع الماء", "غسيل الأيدي", "وعاء ثابت"] },
+        { word: "مرحاض", hints: ["تصريف صحي", "قاعدة خزفية", "تنظيف"] },
+        { word: "دش", hints: ["استحمام عمودي", "رذاذ متساقط", "ماء نازل"] },
+        { word: "بانيو", hints: ["استرخاء مائي", "حوض استلقاء", "ملء بالماء"] },
+        { word: "مرتبة", hints: ["إسفنج النوم", "دعم الجسد", "راحة سريرية"] },
+        { word: "غطاء", hints: ["ستر الأشياء", "طبقة علوية", "حماية خارجية"] },
+        { word: "ناموسية", hints: ["صد الحشرات", "شبكة نوم", "حماية ليلية"] },
+        { word: "سلة مهملات", hints: ["تجميع النفايات", "إخفاء القمامة", "وعاء مهمل"] },
+        { word: "منفضة", hints: ["ريش تنظيف", "إزالة التراب", "خفق ناعم"] },
+        { word: "ممسحة", hints: ["تنظيف البلاط", "إزالة البلل", "قطعة قماش أرضية"] },
+        { word: "جارفة", hints: ["سحب التراب", "آلة ضخمة", "تسوية الأرض"] },
+        { word: "رافعة", hints: ["رفع الأثقال", "ذراع حديدية", "علو"] },
+        { word: "خلاطة", hints: ["مزج الأسمنت", "دوران خرساني", "بناء"] },
+        { word: "مضخة", hints: ["سحب ودفع", "رفع السوائل", "ضغط مائي"] },
+        { word: "مولد", hints: ["إنتاج الطاقة", "طوارئ كهربائية", "محرك مولد"] },
+        { word: "بطارية", hints: ["تخزين الطاقة", "طاقة صامتة", "شحن كيميائي"] },
+        { word: "محول", hints: ["تغيير الجهد", "تنظيم الكهرباء", "جهاز تنظيم"] },
+        { word: "قابس", hints: ["توصيل بالحائط", "أنانيب معدنية صغيرة", "وصلة كهرباء"] },
+        { word: "سلك", hints: ["نقل التيار", "نحاس رفيع", "توصيل ممدود"] },
+        { word: "مفتاح كهربائي", hints: ["قطع التيار", "ضغط أصبع", "إضاءة أو إظلام"] },
+        { word: "لمبة", hints: ["توهج زجاجي", "فتيل مضيء", "إضاءة الغرفة"] },
+        { word: "فيوز", hints: ["حماية التيار", "احتراق آمن", "قطع الحماية"] },
+        { word: "عداد", hints: ["حساب الاستهلاك", "أرقام متحركة", "مراقبة الطاقة"] },
+        { word: "صمام", hints: ["تحكم بالغاز", "إغلاق محكم", "منع التسرب"] },
+        { word: "أنبوب غاز", hints: ["توصيل الطبخ", "غاز محبوس", "مسار خطر"] },
+        { word: "ولاعة فرن", hints: ["شرارة الطبخ", "إشعال الشعلة", "ضغط يدوي"] },
+        { word: "مدخنة", hints: ["خروج الدخان", "ممر علوي", "تصاعد البخار"] },
+        { word: "موقد", hints: ["تدفئة الشتاء", "نار مكشوفة", "مركز الجلوس"] },
+        { word: "حطب", hints: ["أخشاب قابلة للاحتراق", "تجميع الغابة", "وقود النار"] },
+        { word: "فحم", hints: ["بقايا سوداء", "حرارة طويلة", "شواء"] },
+        { word: "مشواة", hints: ["طهي اللحم", "حرارة تحتية", "شبكة شواء"] },
+        { word: "سيخ", hints: ["تثبيت اللحم", "حديد رفيع طويل", "شواء متتابع"] },
+        { word: "عصارة", hints: ["استخراج السوائل", "ضغط الفواكه", "عصير طازج"] },
+        { word: "خلاط", hints: ["فرم ونفخ", "شفرات سريعة", "مزيج مطحون"] },
+        { word: "محمصة", hints: ["تحمير الخبز", "حرارة جانبية", "إخراج السخونة"] },
+        { word: "غلاية", hints: ["تسخين الماء", "غليان سريع", "وعاء كهربائي"] },
+        { word: "ترمس", hints: ["حفظ الحرارة", "عزل السائل", "احتفاظ بالدفء"] },
+        { word: "وعاء", hints: ["حفظ ما فيه", "تخزين مؤقت", "عمق مخصص"] },
+        { word: "برطمان", hints: ["زجاج إغلاق", "حفظ المخلل", "غطاء لولبي"] },
+        { word: "علبة", hints: ["تغليف محكم", "صندوق صغير", "فتح وإغلاق"] },
+        { word: "كيس", hints: ["وعاء بلاستيكي", "حمل خفيف", "مرن"] },
+        { word: "محفظة أوراق", hints: ["حفظ الوثائق", "جلد رسمي", "ترتيب الملفات"] },
+        { word: "مشبك غسيل", hints: ["تثبيت بالمنشر", "قبضة بلاستيكية", "مسك الملابس"] },
+        { word: "منشر", hints: ["تعليق الثياب", "تنشيف بالهواء", "أعمدة متوازية"] },
+        { word: "مغسلة ملابس", hints: ["تنظيف الثياب", "دوران آلي", "حوض غسيل"] },
+        { word: "طوق غشائي", hints: ["حاجز خلوي", "غشاء حيوي", "دقة مجهرية"] },
+        { word: "قالب", hints: ["تحديد الشكل", "صب المواد", "نموذج مطابق"] },
+        { word: "طوابع", hints: ["هواية ورقية", "لصق بريدي", "صور صغيرة"] },
+        { word: "وسام", hints: ["تقدير رسمي", "قلادة الشرف", "تكريم رفيع"] },
+        { word: "جائزة", hints: ["حصاد التعب", "هدية الفوز", "تكريم"] },
+        { word: "شهادة", hints: ["إثبات إنجاز", "ورقة تخرج", "اعتراف رسمي"] },
+        { word: "درع", hints: ["تكريم صلب", "تخليد الذكرى", "قطعة معدنية مزخرفة"] },
+        { word: "كأس بطولة", hints: ["رمز الفوز", "مجد ذهبي", "رفع للأعلى"] },
+        { word: "ميدالية", hints: ["قلادة المركز", "طوق الفوز", "دائرة معدنية معلقة"] },
+        { word: "تاج", hints: ["سيادة الملك", "رأس السلطة", "مرصع بالجوهر"] },
+        { word: "عرش", hints: ["جلوس الحاكم", "سلطة عليا", "مقعد ملكي"] },
+        { word: "صولجان", hints: ["عصا الملك", "رمز الحكم", "قبضة السلطة"] },
+        { word: "سيف", hints: ["نصل حاد", "قتال قديم", "صوت المعدن"] },
+        { word: "درع حماية", hints: ["تصدى للضربات", "حماية الجسد", "ترس حربي"] },
+        { word: "خوذة", hints: ["حماية الرأس", "صلابة معدنية", "غطاء المحارب"] },
+        { word: "رمح", hints: ["سلاح طويل", "طعان مسدد", "عصا نصلية"] },
+        { word: "قوس", hints: ["انحناءة خشبية", "إطلاق السهم", "شد الوتر"] },
+        { word: "سهم", hints: ["طيران سريع", "هدف مصوب", "رأس مدبب"] },
+        { word: "جعبة", hints: ["حفظ السهام", "حمل خلفي", "وعاء السلاح"] },
+        { word: "منجنيق", hints: ["قذف الحجارة", "صاروخ قديم", "حصار الحصون"] },
+        { word: "حصن", hints: ["ملجأ آمن", "أسوار منيعة", "دفاع أخير"] },
+        { word: "خندق", hints: ["حفرة دفاعية", "اختباء أرضي", "خط دفاع"] },
+        { word: "بوابة", hints: ["مدخل رئيسي", "حارس السور", "انفتاح وغلق"] },
+        { word: "جسر", hints: ["عبور الماء", "ربط ضفتين", "طريق معلق"] },
+        { word: "نفق", hints: ["طريق مظلم", "اختراق الجبل", "تحت السطح"] },
+        { word: "سد", hints: ["حجز المياه", "جدار ضخم", "توليد طاقة"] },
+        { word: "منارة", hints: ["إرشاد السفن", "ضوء ساحلي", "علو بعيد"] },
+        { word: "رصيف", hints: ["مسار المشاة", "جانب الطريق", "ارتفاع إسمنتي"] },
+        { word: "مظلة حافلات", hints: ["انتظار مظلل", "محطة طريق", "وقاية من الشمس"] },
+        { word: "إشارة مرور", hints: ["ألوان متغيرة", "تنظيم السير", "تحكم بالشارع"] },
+        { word: "عمود إنارة", hints: ["إضاءة الشارع", "وقوف طويل", "نور ليلي"] },
+        { word: "صندوق بريد", hints: ["ابتلاع الرسائل", "وعاء معدني أصفر", "استلام البريد"] },
+        { word: "نافورة", hints: ["تدفق الماء", "حركة صاعدة", "زينة الساحات"] },
+        { word: "تمثال", hints: ["تجسيد صامت", "حجر منحوت", "تخليد الشخصية"] },
+        { word: "نصب تذكاري", hints: ["تخليد الحدث", "بناء رمزي", "ساحة تاريخية"] },
+        { word: "سوانح", hints: ["عوارض الطريق", "اتجاهات عابرة", "لافتات إرشادية"] },
+        { word: "محطة وقود", hints: ["تعبئة السيارات", "رائحة البنزين", "مضخات متتالية"] },
+        { word: "مغسلة سيارات", hints: ["تنظيف آلي", "رغوة كثيفة", "إزالة الأتربة"] },
+        { word: "ورشة", hints: ["إصلاح الأعطال", "تطاير الشرر", "أيدي ماهرة"] },
+        { word: "مخبز آلي", hints: ["إنتاج جماعي", "خط طحين", "رائحة العجين"] },
+        { word: "مجزرة", hints: ["تجهيز اللحوم", "تعليق الذبائح", "مكان مقفر"] },
+        { word: "سوق أسبوعي", hints: ["تجمع مؤقت", "باعة متجاورون", "صخب مؤقت"] },
+        { word: "معرض", hints: ["عرض الفنون", "مساحة واسعة", "لوحات مصفوفة"] },
+        { word: "مكتب بريد", hints: ["توزيع الطرود", "أختام بريدية", "خدمة الرسائل"] },
+        { word: "مركز شُرطة", hints: ["حفظ الأمن", "حجز الخارجين", "سلطة القانون"] },
+        { word: "مطافئ", hints: ["إخماد النيران", "سيارات حمراء", "حالة طوارئ"] },
+        { word: "مستصفى", hints: ["علاج مبدئي", "إسعاف سريع", "رعاية أولية"] },
+        { word: "دار أجيال", hints: ["رعاية المسنين", "هدوء الشيخوخة", "إقامة هادئة"] },
+        { word: "مأتم", hints: ["تجمع الحزن", "سرادق العزاء", "مواساة"] },
+        { word: "صالة أفراح", hints: ["بهجة مؤقتة", "أضواء زاهية", "احتفال ليلي"] },
+        { word: "قاعة استقبال", hints: ["ترحيب بالضيوف", "انتظار رسمي", "جلسة مؤقتة"] },
+        { word: "تفاح", hints: ["فاكهة", "شجرة", "أحمر"] },
+        { word: "موز", hints: ["اصفر", "قرد", "استوائي"] },
+        { word: "برتقال", hints: ["حمضيات", "فيتامين", "عصير"] },
+        { word: "عنب", hints: ["كرمة", "عناقيد", "صيفي"] },
+        { word: "بطيخ", hints: ["صيف", "أخضر", "حلو"] },
+        { word: "رمان", hints: ["حبوب", "أحمر", "حامض"] },
+        { word: "تمر", hints: ["نخلة", "صحراء", "حلو"] },
+        { word: "خيار", hints: ["سلطة", "أخضر", "طازج"] },
+        { word: "طماطم", hints: ["صلصة", "حمراء", "خضار"] },
+        { word: "بطاطس", hints: ["قلي", "نشا", "تربة"] },
+        { word: "بصل", hints: ["دموع", "قشور", "نكهة"] },
+        { word: "ثوم", hints: ["رائحة", "فصوص", "مضاد"] },
+        { word: "جزر", hints: ["أرنب", "برتقالي", "نظر"] },
+        { word: "خس", hints: ["ورقيات", "سلطة", "أخضر"] },
+        { word: "فلفل", hints: ["حار", "توابل", "ألوان"] },
+        { word: "ملح", hints: ["طعام", "بحر", "أبيض"] },
+        { word: "سكر", hints: ["حلاوة", "شاي", "أبيض"] },
+        { word: "قهوة", hints: ["صباح", "مر", "منبه"] },
+        { word: "شاي", hints: ["أوراق", "ساخن", "مغلي"] },
+        { word: "حليب", hints: ["بقرة", "كالسيوم", "أبيض"] },
+        { word: "جبن", hints: ["ألبان", "صفائح", "إفطار"] },
+        { word: "خبز", hints: ["تنور", "قمح", "غذائي"] },
+        { word: "لحم", hints: ["شواء", "بروتين", "أطباق"] },
+        { word: "دجاج", hints: ["طير", "مزرعة", "بيض"] },
+        { word: "سمك", hints: ["بحر", "قشور", "عوم"] },
+        { word: "بيض", hints: ["قشرة", "إفطار", "صفار"] },
+        { word: "عسل", hints: ["نحل", "شفاء", "حلو"] },
+        { word: "زبدة", hints: ["دهن", "صفراء", "خبز"] },
+        { word: "زيت", hints: ["قلي", "سائل", "معصرة"] },
+        { word: "أرز", hints: ["حبوب", "أبيض", "طبخ"] },
+        { word: "أسد", hints: ["ملك", "غابة", "فخامة"] },
+        { word: "نمر", hints: ["خطوط", "مفترس", "سريع"] },
+        { word: "فهد", hints: ["جري", "بقع", "برية"] },
+        { word: "فيل", hints: ["خرطوم", "ضخم", "رمادي"] },
+        { word: "زرافة", hints: ["طول", "رقبة", "أوراق"] },
+        { word: "حمار", hints: ["صبر", "حمل", "ريف"] },
+        { word: "حصان", hints: ["جواد", "سباق", "اصيل"] },
+        { word: "جمال", hints: ["سفينة الصحراء", "سنام", "صبر"] },
+        { word: "ذئب", hints: ["عواء", "مكر", "قطيع"] },
+        { word: "ثعلب", hints: ["حيلة", "ذيل", "مكر"] },
+        { word: "قرد", hints: ["شجرة", "ذكاء", "موز"] },
+        { word: "دب", hints: ["شتاء", "غابة", "فرو"] },
+        { word: "أرنب", hints: ["قفز", "جزر", "أذنان"] },
+        { word: "فأر", hints: ["جبن", "صغير", "جري"] },
+        { word: "قط", hints: ["أليف", "مواء", "شارب"] },
+        { word: "كلب", hints: ["حراسة", "وفاء", "نباح"] },
+        { word: "خروف", hints: ["صوف", "عيد", "أضحية"] },
+        { word: "معزة", hints: ["حليب", "صخور", "جبال"] },
+        { word: "بقرة", hints: ["حليب", "مزرعة", "قرون"] },
+        { word: "ثور", hints: ["قوة", "مصارعة", "قرون"] },
+        { word: "صقر", hints: ["حلق", "صيد", "مخلب"] },
+        { word: "نسر", hints: ["قمم", "ارتفاع", "قوة"] },
+        { word: "بومة", hints: ["ليل", "حكمة", "عينان"] },
+        { word: "غراب", hints: ["أسود", "ذكاء", "صوت"] },
+        { word: "حمام", hints: ["سلام", "رسائل", "أبيض"] },
+        { word: "عصفور", hints: ["تغريد", "صغير", "شجر"] },
+        { word: "بطة", hints: ["ماء", "عوم", "ريش"] },
+        { word: "وزة", hints: ["طويل", "أبيض", "بركة"] },
+        { word: "دجاجة", hints: ["بيض", "صياح", "ريش"] },
+        { word: "ديك", hints: ["فجر", "عرف", "صياح"] },
+        { word: "شمس", hints: ["نهار", "حرارة", "نور"] },
+        { word: "قمر", hints: ["ليل", "تدرج", "فضاء"] },
+        { word: "نجم", hints: ["سماء", "ليل", "بريق"] },
+        { word: "سحاب", hints: ["مطر", "أبيض", "علو"] },
+        { word: "مطر", hints: ["ماء", "شتاء", "غيوم"] },
+        { word: "برق", hints: ["ضوء", "سماء", "صاعقة"] },
+        { word: "رعد", hints: ["صوت", "شتاء", "هزيم"] },
+        { word: "رياح", hints: ["هواء", "عاصفة", "حركة"] },
+        { word: "ثلج", hints: ["برد", "أبيض", "تزلج"] },
+        { word: "جليد", hints: ["تجميد", "صلب", "شتاء"] },
+        { word: "بحر", hints: ["مياه", "أمواج", "أزرق"] },
+        { word: "نهر", hints: ["جريان", "عذوبة", "مجرى"] },
+        { word: "بحيرة", hints: ["مياه راكدة", "ضفاف", "طبيعة"] },
+        { word: "محيط", hints: ["عمق", "اتساع", "مياه"] },
+        { word: "جبل", hints: ["ارتفاع", "صخور", "شموخ"] },
+        { word: "تل", hints: ["ارتفاع بسيط", "أرض", "صعود"] },
+        { word: "وادي", hints: ["منخفض", "سيول", "أخاديد"] },
+        { word: "صحراء", hints: ["رمال", "حرارة", "عطش"] },
+        { word: "واحة", hints: ["نخيل", "ماء", "خضرة"] },
+        { word: "غابة", hints: ["أشجار", "حيوانات", "كثافة"] },
+        { word: "أرض", hints: ["كوكب", "حياة", "تربة"] },
+        { word: "سماء", hints: ["فضاء", "أزرق", "علوان"] },
+        { word: "فضاء", hints: ["نجوم", "كواكب", "فراغ"] },
+        { word: "كوكب", hints: ["دوران", "فلك", "مدار"] },
+        { word: "مجرة", hints: ["نجوم متراصة", "كون", "دوران"] },
+        { word: "مذنب", hints: ["ذيل مضيء", "سرعة", "فضاء"] },
+        { word: "نيزك", hints: ["احتراق", "سقوط", "شهاب"] },
+        { word: "جاذبية", hints: ["سقوط", "أرض", "قانون"] },
+        { word: "أكسجين", hints: ["تنفس", "هواء", "حياة"] },
+        { word: "ماء", hints: ["حياة", "عذب", "شرب"] },
+        { word: "نار", hints: ["حريق", "دفء", "لهب"] },
+        { word: "هواء", hints: ["تنفس", "غير مرئي", "رياح"] },
+        { word: "تربة", hints: ["زرع", "طين", "أرض"] },
+        { word: "حجر", hints: ["صلب", "صخر", "بناء"] },
+        { word: "رمل", hints: ["شاطئ", "صحراء", "حبيبات"] },
+        { word: "طين", hints: ["ماء وتربة", "لصق", "تخزين"] },
+        { word: "حديد", hints: ["صناعة", "قوة", "صلب"] },
+        { word: "ذهب", hints: ["معدن ثمين", "أصفر", "زينة"] },
+        { word: "فضة", hints: ["معدن أبيض", "حلي", "ثمين"] },
+        { word: "نحاس", hints: ["أسلاك", "بريق", "موصل"] },
+        { word: "ألومنيوم", hints: ["خفيف", "علب", "أواني"] },
+        { word: "زجاج", hints: ["شفاف", "قابل للكسر", "نافذة"] },
+        { word: "خشب", hints: ["أشجار", "أثاث", "حرق"] },
+        { word: "بلاستيك", hints: ["صناعي", "مرن", "أكياس"] },
+        { word: "ورق", hints: ["كتابة", "أشجار", "أبيض"] },
+        { word: "قطن", hints: ["ملابس", "ناعم", "زراعة"] },
+        { word: "حرير", hints: ["ناعم", "فخم", "دود"] },
+        { word: "صوف", hints: ["خروف", "دفء", "نسيج"] },
+        { word: "جلد", hints: ["حقائب", "أحذية", "حيوان"] },
+        { word: "مطاط", hints: ["مرن", "إطارات", "تمدد"] },
+        { word: "فحم", hints: ["طاقة", "أسود", "احتراق"] },
+        { word: "بترول", hints: ["طاقة", "أسود", "استخراج"] },
+        { word: "غاز", hints: ["طبخ", "طاقة", "احتراق"] },
+        { word: "كهرباء", hints: ["طاقة", "إضاءة", "تيار"] },
+        { word: "طاقة", hints: ["قوة", "حركة", "توليد"] },
+        { word: "سرعة", hints: ["حركة", "زمن", "تسارع"] },
+        { word: "زمن", hints: ["وقت", "ساعات", "ماضي"] },
+        { word: "تاريخ", hints: ["ماضي", "أحداث", "كتب"] },
+        { word: "مستقبل", hints: ["آتي", "توقع", "أمل"] },
+        { word: "حاضر", hints: ["الآن", "واقع", "فعل"] },
+        { word: "حياة", hints: ["وجود", "تنفس", "بقاء"] },
+        { word: "موت", hints: ["نهاية", "غياب", "قدر"] },
+        { word: "فرح", hints: ["سعادة", "ابتسامة", "بهجة"] },
+        { word: "حزن", hints: ["بكاء", "ألم", "شعور"] },
+        { word: "غضب", hints: ["انفعال", "ثورة", "صوت"] },
+        { word: "خوف", hints: ["قلق", "هرب", "رجفة"] },
+        { word: "شجاعة", hints: ["إقدام", "قوة", "جرأة"] },
+        { word: "حب", hints: ["قلب", "مشاعر", "مودة"] },
+        { word: "كره", hints: ["بغض", "عداء", "رفض"] },
+        { word: "سلام", hints: ["هدوء", "وئام", "صلح"] },
+        { word: "حرب", hints: ["قتال", "دمار", "جيوش"] },
+        { word: "عدالة", hints: ["حق", "قانون", "ميزان"] },
+        { word: "ظلم", hints: ["قهر", "تعدي", "ألم"] },
+        { word: "صدق", hints: ["حقائق", "أمانة", "صراحة"] },
+        { word: "كذب", hints: ["زيف", "خداع", "تضليل"] },
+        { word: "أمانة", hints: ["حفظ", "صدق", "ثقة"] },
+        { word: "خيانة", hints: ["غدر", "طعن", "نقض"] },
+        { word: "وفاء", hints: ["إخلاص", "التزام", "محبة"] },
+        { word: "غدر", hints: ["خيانة", "مفاجأة", "أذى"] },
+        { word: "ذكاء", hints: ["فطنة", "تفكير", "حل"] },
+        { word: "غباء", hints: ["جهل", "بطء", "خطأ"] },
+        { word: "علم", hints: ["معرفة", "دراسة", "كتب"] },
+        { word: "جهل", hints: ["ظلام", "نقص", "عدم معرفة"] },
+        { word: "صبر", hints: ["تحمل", "انتظار", "جلد"] },
+        { word: "عجلة", hints: ["سرعة", "تسرع", "خطأ"] },
+        { word: "تواضع", hints: ["بساطة", "أدب", "رفعة"] },
+        { word: "غرور", hints: ["تكبر", "تعالي", "إعجاب"] },
+        { word: "كرم", hints: ["عطاء", "ضيافة", "جود"] },
+        { word: "بخل", hints: ["شح", "إمساك", "حرص"] },
+        { word: "صداقة", hints: ["رفقة", "محبة", "مشاركة"] },
+        { word: "عداوة", hints: ["خصومة", "بغض", "قطيعة"] },
+        { word: "تعاون", hints: ["مساعدة", "عمل جماعي", "تكاتف"] },
+        { word: "تنافس", hints: ["سباق", "رغبة في الفوز", "تحدي"] },
+        { word: "إبداع", hints: ["ابتكار", "فنون", "تميز"] },
+        { word: "تقليد", hints: ["محاكاة", "تكرار", "نسخ"] },
+        { word: "تغيير", hints: ["تجديد", "تحول", "تطوير"] },
+        { word: "ثبات", hints: ["استقرار", "استمرار", "قوة"] },
+        { word: "حركة", hints: ["نشاط", "انتقال", "ديناميكية"] },
+        { word: "سكون", hints: ["هدوء", "ثبات", "صمت"] }
+    ];
+
+   let gameState = {
+   totalPlayers: 0,
+   impostorCount: 0,
+   players: [], 
+   currentPlayerIndex: 0,
+   isCardRevealed: false
+   };
+   
+   function startGame() {
+   const total = parseInt(document.getElementById('total-players').value);
+   const impostors = parseInt(document.getElementById('impostor-count').value);
+   const errorDiv = document.getElementById('setup-error');
+   
+   if (impostors >= total) {
+   errorDiv.innerText = "عدد الجواسيس يجب أن يكون أقل من عدد اللاعبين!";
+   return;
+   }
+   errorDiv.innerText = "";
+   
+   const randomItem = wordsDatabase[Math.floor(Math.random() * wordsDatabase.length)];
+   const secretWord = randomItem.word;
+   const randomHint = randomItem.hints[Math.floor(Math.random() * randomItem.hints.length)];
+   
+   let roles = Array(total).fill(false); 
+   let impostorIndices = [];
+   
+   while (impostorIndices.length < impostors) {
+   let randIdx = Math.floor(Math.random() * total);
+   if (!impostorIndices.includes(randIdx)) {
+   impostorIndices.push(randIdx);
+   roles[randIdx] = true; 
+   }
+   }
+   
+   gameState.totalPlayers = total;
+   gameState.impostorCount = impostors;
+   gameState.players = roles.map(isImp => ({
+   isImpostor: isImp,
+   word: isImp ? "أنت الجاسوس (المتربص) 🕵️‍♂️" : secretWord,
+   hint: isImp ? `تلميحك: ${randomHint}` : ""
+   }));
+   gameState.currentPlayerIndex = 0;
+   gameState.isCardRevealed = false;
+   
+   document.getElementById('setup-screen').classList.remove('active');
+   document.getElementById('game-screen').classList.add('active');
+   updateGameUI();
+   }
+   
+   function updateGameUI() {
+   document.getElementById('player-turn').innerText = `دور اللاعب ${gameState.currentPlayerIndex + 1}`;
+   document.getElementById('card-prompt').style.display = 'block';
+   document.getElementById('card-result').style.display = 'none';
+   document.getElementById('card-hint').style.display = 'none';
+   document.getElementById('next-btn').style.display = 'none';
+   gameState.isCardRevealed = false;
+   }
+   
+   function toggleCard() {
+   const prompt = document.getElementById('card-prompt');
+   const result = document.getElementById('card-result');
+   const hint = document.getElementById('card-hint');
+   const nextBtn = document.getElementById('next-btn');
+   
+   if (!gameState.isCardRevealed) {
+   const player = gameState.players[gameState.currentPlayerIndex];
+   
+   prompt.style.display = 'none';
+   result.style.display = 'block';
+   result.innerText = player.word;
+   
+   if (player.isImpostor) {
+   result.style.color = '#e74c3c'; 
+   hint.style.display = 'block';
+   hint.innerText = player.hint;
+   } else {
+   result.style.color = '#ecd08a'; 
+   hint.style.display = 'none';
+   }
+   
+   nextBtn.style.display = 'block';
+   gameState.isCardRevealed = true;
+   }
+   }
+   
+   function nextPlayer() {
+   gameState.currentPlayerIndex++;
+   if (gameState.currentPlayerIndex < gameState.totalPlayers) {
+   updateGameUI();
+   } else {
+   document.getElementById('game-screen').classList.remove('active');
+   document.getElementById('end-screen').classList.add('active');
+   }
+   }
+   
+   function resetGame() {
+   document.getElementById('end-screen').classList.remove('active');
+   document.getElementById('setup-screen').classList.add('active');
+   }
+   </script>
+
+</body>
+</html>
